@@ -43,8 +43,8 @@ def main():
     baseurl = argv[1]
     #pattern = argv[2]
     domain = calculateDomain(baseurl)
-    leveldomain = domain + (baseurl[:baseurl.rindex(r"/")])[baseurl.index(r"/"):]
-    print(f"Base domain: {domain}")
+    leveldomain = domain + (baseurl[:baseurl.rindex(r"/")])[baseurl.index(r"/",8):]
+    print(f"Base domain: {domain}\nLevel domain: {leveldomain}")
     links = list()
     links.append(baseurl)
 
@@ -71,7 +71,7 @@ def main():
                 parsedUrl = parsedUrl[:parsedUrl.rindex("?")]
             if not re.search(domain,parsedUrl) or not re.match(r"//",parsedUrl):
                 parsedUrl = evaluateDoubleDotNotation(url,parsedUrl)
-            if parsedUrl in links or parsedUrl[-3:] in ("pdf","jpg","jpeg","png"):
+            if parsedUrl in links or parsedUrl[-3:] in ("pdf","jpg","jpeg","png") or not re.search(leveldomain,parsedUrl):
                 continue
             print(f"New URL found and added to the list: {parsedUrl}")
             links.append(parsedUrl)
