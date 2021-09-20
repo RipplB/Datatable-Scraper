@@ -84,12 +84,26 @@ def main():
         except:
             print(f"HTTP connection to {url} has failed, might be an invalid url")
             continue
+        currNum = 1
         doc = BeautifulSoup(response.text,"lxml")
         for finding in doc.find_all("table"):
+            name = str()
             if finding.has_attr("id"):
                 print(f"Table found with id {(finding['id'])}")
+                name = " ".join((url, finding['id']))
             else:
-                print("Table found")
+                print("Table found. Since it has no id, it is gonna be called: {}".format(currNum))
+                newurl = url.replace("/","_").replace(":","")
+                name = f"{newurl} {currNum}.csv"
+                currNum = currNum + 1
+            with open(name,"w",encoding="utf-8") as file:
+                for row in finding("tr"):
+                    for cell in row("td"):
+                        if cell.string is not None:
+                            file.write(cell.string)
+                        file.write(",")
+                    file.write("\n")
+            
 
 if __name__ == "__main__":
     """ if len(argv) < 3:
