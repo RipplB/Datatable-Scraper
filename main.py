@@ -1,4 +1,5 @@
 from requests import *
+from bs4 import BeautifulSoup
 from sys import argv
 import re
 
@@ -52,15 +53,13 @@ def main():
         try:
             response = get(url)
         except:
-            #print(f"HTTP connection to {url} has failed, might be an invalid url")
+            print(f"HTTP connection to {url} has failed, might be an invalid url")
             continue
-        for finding in re.finditer(r"<a.*href=.*?>",response.text):
-            parsedUrl = finding.group()
-            parsedUrl = parsedUrl[:parsedUrl.index(">")+1] #because re is sometimes greedy even tho it was told not to be
-            attribs = tagToDictionary(parsedUrl)
-            if "href" not in attribs.keys():
+        doc = BeautifulSoup(response.text,"lxml")
+        for finding in doc.find_all("a"):
+            if not finding.has_attr("href"):
                 continue
-            parsedUrl = attribs["href"].strip('"')
+            parsedUrl = finding["href"]
             if parsedUrl=="" or parsedUrl[0] == "#":
                 continue
             if (re.match("http",parsedUrl) or re.match(r"//",parsedUrl)) and not re.search(leveldomain,parsedUrl):
@@ -68,6 +67,8 @@ def main():
                 continue
             if "#" in parsedUrl:
                 parsedUrl = parsedUrl[:parsedUrl.rindex("#")]
+            if "?" in parsedUrl:
+                parsedUrl = parsedUrl[:parsedUrl.rindex("?")]
             if not re.search(domain,parsedUrl) or not re.match(r"//",parsedUrl):
                 parsedUrl = evaluateDoubleDotNotation(url,parsedUrl)
             if parsedUrl in links or parsedUrl[-3:] in ("pdf","jpg","jpeg","png"):
@@ -83,12 +84,12 @@ def main():
         except:
             print(f"HTTP connection to {url} has failed, might be an invalid url")
             continue
-        fileOName = str()
-        for finding in re.finditer(r"<table.*>.*</table>",response.text):
-            openingtag = re.match("<.*>",finding.group()).group()
-            attribs = tagToDictionary(openingtag)
-            if "id" in attribs.keys():
-                print(f"Table found with id {(attribs['id'])}")
+        doc = BeautifulSoup(response.text,"lxml")
+        for finding in doc.find_all("table"):
+            if finding.has_attr("id"):
+                print(f"Table found with id {(finding['id'])}")
+            else:
+                print("Table found")
 
 if __name__ == "__main__":
     """ if len(argv) < 3:
